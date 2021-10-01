@@ -18,6 +18,16 @@ npm install --save ts-alias
 ## API
 
 ```typescript
+type AliasList = { 
+    [alias: string]: { pathnames: string[], exact: boolean }
+};
+
+type TsAliasList = { [alias: string]: string[] };
+
+type ModuleAliasList = { [alias: string]: string | Function };
+
+type TWebpackExternals = (data: { request: string }, callback: (err: undefined, result: string) => void) => void;
+
 class TsAlias {
 
     constructor( input: string | AliasList, private debug: boolean = false );

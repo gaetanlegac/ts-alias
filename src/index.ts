@@ -182,7 +182,7 @@ export default class TsAlias {
     }
 
     public isAliased(filename: string): boolean {
-        return this.apply(filename) !== null;
+        return this.apply(filename, true) !== null;
     }
 
     public realpath(request: string, strict?: false): string;
@@ -212,7 +212,7 @@ export default class TsAlias {
     }
 
     public containsAlias(request: string): boolean {
-        return this.realpath(request) !== null;
+        return this.realpath(request, true) !== null;
     }
 
     /*----------------------------------

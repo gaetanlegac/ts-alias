@@ -1,13 +1,23 @@
 # Typescript Aliases Transform
 
-Parse module aliases from tsconfig and allows you to: 
+Small tool to parse & play with Typscript aliases.
+
+Path Checking:
+
+* If it contains an alias
+* If it can be aliased
+
+Path Transformation:
 
 * Resolve full path from aliased path
 * Apply aliases to a filename
+
+Aliases list conversion:
+
 * Generate webpack aliases
 * Generate module-alias resolver
 
-**WARNING: This package is not mature. Please don't use it in production.**
+**/!\ WARNING: This package is not enough mature to be used in production.**
 
 [![npm](https://img.shields.io/npm/v/ts-alias)](https://www.npmjs.com/package/ts-alias)
 
@@ -40,8 +50,17 @@ class TsAlias {
     public list: AliasList;
 
     // Path transformation
-    public apply(filename: string): string;
-    public realpath(request: string): string;
+    public apply(filename: string, strict?: false): string;
+    public apply(filename: string, strict: true): string | null;
+    public apply(filename: string, strict?: boolean): string | null;
+
+    public containsAlias(request: string): boolean;
+
+    public realpath(request: string, strict?: false): string;
+    public realpath(request: string, strict: true): string | null;
+    public realpath(request: string, strict?: boolean): string | null;
+
+    public isAliased(filename: string): boolean;
     
     // List transformation
     public forWebpack( modulesPath?: string ): { aliases: TsAliasList };
@@ -71,8 +90,14 @@ console.log(
     aliases.apply('/home/dopamyn/www/project/src/server/models'),
     // "@server/models"
     
+    aliases.isAliased('/home/dopamyn/www/project/src/common'),
+    // false
+    
     aliases.realpath('@server/models'),
     //  "/home/dopamyn/www/project/src/server/models"
+    
+    aliases.containsAlias('@nonExistingAlias/directory'),
+    // false
     
 );
 ```

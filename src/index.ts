@@ -155,7 +155,9 @@ export default class TsAlias {
     - TRANSFORM PATHS
     ----------------------------------*/
 
-    public apply(filename: string): string {
+    public apply(filename: string, strict?: false): string;
+    public apply(filename: string, strict: true): string | null;
+    public apply(filename: string, strict?: boolean): string | null {
 
         for (const alias in this.list) {
             const { exact, pathnames } = this.list[alias];
@@ -175,11 +177,17 @@ export default class TsAlias {
             }
         }
 
-        // Unchanged
-        return filename;
+        // No matching alias
+        return strict ? null : filename;
     }
 
-    public realpath(request: string): string {
+    public isAliased(filename: string): boolean {
+        return this.apply(filename) !== null;
+    }
+
+    public realpath(request: string, strict?: false): string;
+    public realpath(request: string, strict: true): string | null;
+    public realpath(request: string, strict?: boolean): string | null {
 
         for (const alias in this.list) {
             const { exact, pathnames } = this.list[alias];
@@ -199,8 +207,12 @@ export default class TsAlias {
             }
         }
 
-        // Unchanged
-        return request;
+        // No matching alias
+        return strict ? null : request;
+    }
+
+    public containsAlias(request: string): boolean {
+        return this.realpath(request) !== null;
     }
 
     /*----------------------------------

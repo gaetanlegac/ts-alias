@@ -7,6 +7,8 @@ Parse module aliases from tsconfig and allows you to:
 * Generate webpack aliases
 * Generate module-alias resolver
 
+**WARNING: This package is not mature. Please don't use it in production.**
+
 [![npm](https://img.shields.io/npm/v/ts-alias)](https://www.npmjs.com/package/ts-alias)
 
 ## Installation

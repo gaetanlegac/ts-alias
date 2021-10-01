@@ -1,0 +1,45 @@
+{
+    "name": "ts-alias",
+    "author": "Gaetan Le Gac <contact@gaetan-legac.fr>",
+    "description": "Parse module aliases from tsconfig ; Apply / remove them from pathnames ; Generate config for webpack & module-alias.",
+    "keywords": [
+        "typescript",
+        "tsconfig",
+        "tsconfig.json",
+        "json",
+        "alias",
+        "aliases",
+        "module",
+        "path",
+        "file",
+        "filename",
+        "replace",
+        "transform",
+        "convert",
+        "parse",
+        "webpack",
+        "module-alias"
+    ],
+    "version": "0.0.2",
+    "license": "MIT",
+    "private": false,
+    "main": "bin/index.js",
+    "files": [
+        "bin"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/dopamyn/ts-alias.git"
+    },
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w",
+        "prepare": "npm run build"
+    },
+    "devDependencies": {
+        "typescript": "^4.3.5"
+    },
+    "dependencies": {
+        "json5": "^2.2.0"
+    }
+}

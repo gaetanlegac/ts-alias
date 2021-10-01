@@ -74,14 +74,26 @@ class TsAlias {
 }
 ```
 
-## Example
+## Usage Example
 
 ```typescript
 import Aliases from 'ts-alias';
 const aliases = new Aliases();
-// or parseAliases("./tsconfig.json");
-// or parseAliases( process.cwd() + '/tsconfig.json );
 
+// Generate list for module-alias
+import moduleAlias from 'module-alias';
+moduleAlias.addAliases( aliases.forModuleAlias() )
+
+// Generate list for webpack
+module.export = {
+    ...
+    resolve: {
+        alias: aliases.forWebpack(),
+    }
+    ...
+}
+
+// Transform / check paths
 console.log( 
 
     aliases.typescript,
@@ -89,14 +101,22 @@ console.log(
     
     aliases.apply('/home/dopamyn/www/project/src/server/models'),
     // "@server/models"
+    aliases.apply('/home/dopamyn/www/project/src/server/repositories'),
+    // "/home/dopamyn/www/project/src/server/repositories"
     
+    aliases.isAliased('/home/dopamyn/www/project/src/server/repositories'),
+    // true
     aliases.isAliased('/home/dopamyn/www/project/src/common'),
     // false
     
     aliases.realpath('@server/models'),
-    //  "/home/dopamyn/www/project/src/server/models"
+    // "/home/dopamyn/www/project/src/server/models"
+    aliases.realpath('@client/components'),
+    // "@client/components"
     
-    aliases.containsAlias('@nonExistingAlias/directory'),
+    aliases.containsAlias('@server/models'),
+    // true
+    aliases.containsAlias('@client/components'),
     // false
     
 );
@@ -104,7 +124,6 @@ console.log(
 
 ## TODO
 
-* More examples
 * Better path resolving (traverse extends)
 * Strict types checking
 * Tests

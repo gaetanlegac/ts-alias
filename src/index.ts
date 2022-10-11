@@ -50,7 +50,7 @@ export default class TsAlias {
             return;
         }
 
-        // Absolute path
+        // Ensure the path is absolute
         if (!path.isAbsolute( input ))
             input = path.join(process.cwd(), input);
 
@@ -68,14 +68,15 @@ export default class TsAlias {
 
         }
 
+        // Parse the tsconfig.json file
         let tsBaseDir: string;
         ({
             paths: this.typescript,
             baseUrl: tsBaseDir
         } = this.readTsConfig(tsDir, tsFile));
 
+        // Build the list of aliases
         this.list = this.processAliases(this.typescript, tsBaseDir);
-
     }
 
     /*----------------------------------
@@ -113,32 +114,38 @@ export default class TsAlias {
 
     }
 
-    private processAliases( typescript: TsAliasList, tsBaseDir: string ): AliasList {
+    private processAliases( tsAliases: TsAliasList, tsBaseDir: string ): AliasList {
 
         const list: AliasList = {};
 
-        for (let match in typescript) {
+        for (let match in tsAliases) {
 
-            const destinations = typescript[match];
+            const destinations = tsAliases[match];
 
             // Détermine if it must be exact match
             let exact = !match.endsWith('/*');
             if (!exact)
                 match = match.substring(0, match.length - 2);
             
+            // Process each destination path
             const pathnames = destinations.map((destination) => {
 
                 // Remove wildcard
                 if (destination.endsWith('*'))
                     destination = destination.substring(0, destination.length - 1);
-
                 // Remove trailing slash
                 if (destination.endsWith('/'))
                     destination = destination.substring(0, destination.length - 1);
 
-                return destination
-                    ? path.join(tsBaseDir, destination)
-                    : tsBaseDir;
+                // If the destination is a node module, keep the path as it is
+                const isNpmModule = destination[0] !== '.' && destination[0] !== '/';
+                if (isNpmModule)
+                    return destination;
+                // Otherwise, concat the path with the base dir (the one given in the tsconfig)
+                else if (destination)   
+                    return path.join(tsBaseDir, destination);
+                else
+                    return tsBaseDir;
 
             });
 
@@ -311,10 +318,12 @@ export default class TsAlias {
         const moduleAlias: ModuleAliasList = {};
         const cache: {[request: string]: string} = {};
 
+        // For each registered alias
         for (const alias in this.list) {
 
             const { exact, pathnames } = this.list[alias];
 
+            // Create a resolver
             moduleAlias[alias] = (from, request, requestAlias) => {
 
                 // Exact alias

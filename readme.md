@@ -19,7 +19,7 @@ Aliases list conversion:
 
 **/!\ WARNING: This package is not enough mature to be used in production.**
 
-[![npm](https://img.shields.io/npm/v/ts-alias)](https://www.npmjs.com/package/ts-alias)
+[![npm](https://img.shields.io/npm/v/ts-alias)](https://www.npmjs.com/package/ts-alias) [![npm](https://img.shields.io/npm/dw/ts-alias)
 
 ## Installation
 

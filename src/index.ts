@@ -201,7 +201,11 @@ export default class TsAlias {
     - TRANSFORM PATHS
     ----------------------------------*/
 
-    // Replace real path by alias
+    /**
+     * Replace real path by alias
+     * @param realpath The path you want to replace with alias
+     * @param strict true to return null when no alias could be applied to the path
+     */
     public apply( realpath: string, strict?: false ): string;
     public apply( realpath: string, strict: true ): string | null;
     public apply( realpath: string, strict?: boolean ): string | null {
@@ -227,7 +231,11 @@ export default class TsAlias {
         return strict ? null : realpath;
     }
 
-    // Check if the provided path can be shorten with aliases
+    /**
+     * Check if the provided path can be shorten with aliases
+     * @param filename The path to check
+     * @returns If filename can be shorten an alias
+     */
     public isAliased( filename: string ): boolean {
         return this.apply(filename, true) !== null;
     }
@@ -259,9 +267,13 @@ export default class TsAlias {
         return strict ? null : request;
     }
 
-    // If the provided path contains an alias
-    public containsAlias(request: string): boolean {
-        return this.realpath(request, true) !== null;
+    /**
+     * If the provided path contains an alias
+     * @param filename The path to check
+     * @returns If filename contains an alias
+     */
+    public containsAlias( filename: string ): boolean {
+        return this.realpath( filename, true ) !== null;
     }
 
     /*----------------------------------

@@ -17,7 +17,7 @@ const LogPrefix = '[ts-alias]';
 ----------------------------------*/
 
 type TOptions = ({
-    rootDir: string,
+    rootDir?: string,
 } | {
     aliases: AliasList
 }) & {
@@ -47,7 +47,7 @@ export default class TsAlias {
     // Normalized list
     public list: AliasList;
 
-    public constructor( private options: TOptions ) {
+    public constructor( private options: TOptions = {} ) {
 
         this.options.debug && console.log(LogPrefix, `Instanciate with the following options:`, options);
 
@@ -69,12 +69,22 @@ export default class TsAlias {
             return;
         }
 
-        // Ensure the path is absolute
-        if (!path.isAbsolute( options.rootDir ))
-            options.rootDir = path.join(process.cwd(), options.rootDir);
+        // Use the CWD by default
+        if (options.rootDir === undefined)
+            options.rootDir = process.cwd();
+        else {
+
+            // Ensure the path is absolute
+            if (!path.isAbsolute( options.rootDir ))
+                options.rootDir = path.join(process.cwd(), options.rootDir);
+
+            // And it exists
+            if (!fs.existsSync( options.rootDir ))
+                throw new Error(`The provided rootDir "${options.rootDir}" doesn't exists.`);
+        }
 
         // options.rootDir = config file
-        if (options.rootDir.endsWith('.json')) {
+        if (fs.lstatSync( options.rootDir ).isFile()) {
 
             tsDir = path.dirname(options.rootDir);
             tsFile = path.basename(options.rootDir);

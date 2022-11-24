@@ -1,4 +1,4 @@
-# Typescript Aliases Transform
+# Typescript Aliases Parser
 
 A NodeJS library to parse, process and convert Typescript aliases from tsconfig.json.
 
@@ -157,7 +157,7 @@ When the realpath couldn't be replaced with an alias:
 ## Test if a path contains an alias
 
 ```typescript
- public isAliased( filename: string ): boolean;
+ public containsAlias( filename: string ): boolean;
 ```
 
 ```typescript

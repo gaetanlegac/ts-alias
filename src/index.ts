@@ -202,9 +202,9 @@ export default class TsAlias {
     ----------------------------------*/
 
     // Replace real path by alias
-    public apply(filename: string, strict?: false): string;
-    public apply(filename: string, strict: true): string | null;
-    public apply(filename: string, strict?: boolean): string | null {
+    public apply( realpath: string, strict?: false ): string;
+    public apply( realpath: string, strict: true ): string | null;
+    public apply( realpath: string, strict?: boolean ): string | null {
 
         for (const alias in this.list) {
             const { exact, pathnames } = this.list[alias];
@@ -212,30 +212,30 @@ export default class TsAlias {
 
                 if (exact) {
 
-                    if (filename === pathname)
+                    if (realpath === pathname)
                         return alias;
 
-                } else if (filename.startsWith(pathname + '/')) {
+                } else if (realpath.startsWith(pathname + '/')) {
 
-                    return alias + filename.substring(pathname.length);
+                    return alias + realpath.substring(pathname.length);
 
                 }
             }
         }
 
         // No matching alias
-        return strict ? null : filename;
+        return strict ? null : realpath;
     }
 
     // Check if the provided path can be shorten with aliases
-    public isAliased(filename: string): boolean {
+    public isAliased( filename: string ): boolean {
         return this.apply(filename, true) !== null;
     }
 
     // Replace alias by the real path
-    public realpath(request: string, strict?: false): string;
-    public realpath(request: string, strict: true): string | null;
-    public realpath(request: string, strict?: boolean): string | null {
+    public realpath( request: string, strict?: false): string;
+    public realpath( request: string, strict: true): string | null;
+    public realpath( request: string, strict?: boolean): string | null {
 
         for (const alias in this.list) {
             const { exact, pathnames } = this.list[alias];

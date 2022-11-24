@@ -7,6 +7,12 @@ import fs from 'fs';
 import path from 'path';
 
 /*----------------------------------
+- CONFIG
+----------------------------------*/
+
+const LogPrefix = '[ts-alias]';
+
+/*----------------------------------
 - TYPES
 ----------------------------------*/
 
@@ -43,10 +49,10 @@ export default class TsAlias {
 
     public constructor( private options: TOptions ) {
 
+        this.options.debug && console.log(LogPrefix, `Instanciate with the following options:`, options);
+
         let tsFile: string;
         let tsDir: string;
-
-        console.log("TS ALIAS OPTIONS", options);
 
         // Aliases list already provided
         // No need to search and read the tsconfig file
@@ -59,7 +65,7 @@ export default class TsAlias {
                         pathname => path.join( process.cwd(), pathname )
                     )
                 }
-            this.options.debug && console.log(`Loaded aliases from object`, options.aliases, '=>', this.list);
+            this.options.debug && console.log(LogPrefix, `Loaded aliases from object`, options.aliases, '=>', this.list);
             return;
         }
 
@@ -85,7 +91,7 @@ export default class TsAlias {
         // Default = rootDir
         if (options.modulesDir === undefined)
             options.modulesDir = [path.join(options.rootDir, 'node_modules')]
-        options.debug && console.log(`Using the following dirs for module resolution:`, options.modulesDir);
+        options.debug && console.log(LogPrefix, `Using the following dirs for module resolution:`, options.modulesDir);
 
         // Parse the tsconfig.json file
         let tsBaseDir: string;
@@ -108,7 +114,7 @@ export default class TsAlias {
 
         const fullpath = dir + '/' + file;
 
-        this.options.debug && console.log(`Reading config ${fullpath}`);
+        this.options.debug && console.log(LogPrefix, `Reading config ${fullpath}`);
 
         const raw = fs.readFileSync(fullpath, 'utf-8');
         const tsconfig = JSON5.parse(raw);
@@ -127,7 +133,7 @@ export default class TsAlias {
         if (paths === undefined)
             paths = {};
 
-        this.options.debug && console.log(`Processed config: ${fullpath}`, paths, { baseUrl });
+        this.options.debug && console.log(LogPrefix, `Processed config: ${fullpath}`, paths, { baseUrl });
 
         return { paths, baseUrl };
 
@@ -175,7 +181,7 @@ export default class TsAlias {
             list[match] = { exact, pathnames }
         }
 
-        this.options.debug && console.log(`Processed aliases:`, list, { tsBaseDir });
+        this.options.debug && console.log(LogPrefix, `Processed aliases:`, list, { tsBaseDir });
 
         return list;
 
@@ -185,6 +191,7 @@ export default class TsAlias {
     - TRANSFORM PATHS
     ----------------------------------*/
 
+    // Replace real path by alias
     public apply(filename: string, strict?: false): string;
     public apply(filename: string, strict: true): string | null;
     public apply(filename: string, strict?: boolean): string | null {
@@ -210,10 +217,12 @@ export default class TsAlias {
         return strict ? null : filename;
     }
 
+    // Check if the provided path can be shorten with aliases
     public isAliased(filename: string): boolean {
         return this.apply(filename, true) !== null;
     }
 
+    // Replace alias by the real path
     public realpath(request: string, strict?: false): string;
     public realpath(request: string, strict: true): string | null;
     public realpath(request: string, strict?: boolean): string | null {
@@ -240,6 +249,7 @@ export default class TsAlias {
         return strict ? null : request;
     }
 
+    // If the provided path contains an alias
     public containsAlias(request: string): boolean {
         return this.realpath(request, true) !== null;
     }
@@ -259,7 +269,7 @@ export default class TsAlias {
         externals?: TWebpackExternals 
     } {
 
-        this.options.debug && console.log(`Generating webpack aliases ...`);
+        this.options.debug && console.log(LogPrefix, `Generating webpack aliases ...`);
 
         const aliases: TsAliasList = {};
         const externalsList: {[alias: string]: { pathname: string, exact: boolean }} = {};
@@ -300,7 +310,7 @@ export default class TsAlias {
             aliases[match] = curAliases;
         }
 
-        this.options.debug && console.log(`Webpack aliases =`, aliases, 'Webpakc externals =', externalsList);
+        this.options.debug && console.log(LogPrefix, `Webpack aliases =`, aliases, 'Webpakc externals =', externalsList);
 
         if (nodeExternals === undefined)
             return { aliases };
@@ -313,14 +323,14 @@ export default class TsAlias {
                 if (exact) {
 
                     if (request === alias) {
-                        this.options.debug && console.log(request, '=>', pathname);
+                        this.options.debug && console.log(LogPrefix, request, '=>', pathname);
                         return callback(null, pathname);
                     }
 
                 } else if (request.startsWith( alias )) {
 
                     const destination = pathname + request.substring(alias.length);
-                    this.options.debug && console.log(request, '=>', destination);
+                    this.options.debug && console.log(LogPrefix, request, '=>', destination);
                     return callback(undefined, destination);
 
                 }
@@ -329,7 +339,7 @@ export default class TsAlias {
             callback();
         }
 
-        this.options.debug && console.log(`Webpack aliases:`, aliases);
+        this.options.debug && console.log(LogPrefix, `Webpack aliases:`, aliases);
         return { aliases, externals };
 
     }
@@ -352,12 +362,12 @@ export default class TsAlias {
                 if (exact && request !== alias)
                     return requestAlias;
 
-                this.options.debug && console.log(`Resolving ${request} from ${from}`);
+                this.options.debug && console.log(LogPrefix, `Resolving ${request} from ${from}`);
 
                 // From cache
                 const cacheId = from + '::' + request;
                 if (enableCache && cache[cacheId] !== undefined) {
-                    this.options.debug && console.log('Found from cache:', cache[cacheId]);
+                    this.options.debug && console.log(LogPrefix, 'Found from cache:', cache[cacheId]);
                     return cache[cacheId];
                 }
 
@@ -368,7 +378,7 @@ export default class TsAlias {
                 for (const pathname of pathnames) try {
 
                     const searchPath = pathname + modulePath;
-                    this.options.debug && console.log('- Trying:', searchPath);
+                    this.options.debug && console.log(LogPrefix, '- Trying:', searchPath);
 
                     // Si le chemin existe, il sera retourné
                     if (require.resolve(searchPath)) {
@@ -378,7 +388,7 @@ export default class TsAlias {
                             path.dirname(from),
                             pathname
                         );
-                        this.options.debug && console.log('Found:', relative);
+                        this.options.debug && console.log(LogPrefix, 'Found:', relative);
 
                         cache[cacheId] = relative;
 
@@ -386,7 +396,7 @@ export default class TsAlias {
                     }
 
                 } catch (e) {
-                    this.options.debug && console.log('Unable to resolve', e);
+                    this.options.debug && console.log(LogPrefix, 'Unable to resolve', e);
                 }
 
                 this.options.debug && console.warn(`Unable to resolve alias for ${request} from ${from}`);
@@ -395,7 +405,7 @@ export default class TsAlias {
             };
         }
 
-        this.options.debug && console.log(`Module Alias:`, moduleAlias);
+        this.options.debug && console.log(LogPrefix, `Module Alias:`, moduleAlias);
 
         return moduleAlias;
 

@@ -2,9 +2,12 @@
 - DEPENDANCES
 ----------------------------------*/
 
-import JSON5 from 'json5'; // Because tsconfig.json is closer to json5 rather than json
+// Node
 import fs from 'fs';
 import path from 'path';
+
+// Npm
+import JSON5 from 'json5'; // Because tsconfig.json is closer to json5 rather than json
 
 /*----------------------------------
 - CONFIG

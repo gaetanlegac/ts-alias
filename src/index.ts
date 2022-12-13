@@ -16,10 +16,10 @@ const LogPrefix = '[ts-alias]';
 - TYPES
 ----------------------------------*/
 
-type TOptions = ({
+export type TOptions = ({
     rootDir?: string,
 } | {
-    aliases: AliasList
+    aliases: AliasDefinition[]
 }) & {
     modulesDir?: string[],
     debug?: boolean,
@@ -27,15 +27,20 @@ type TOptions = ({
 
 type TsConfig = { paths: TsAliasList, baseUrl: string }
 
-export type AliasList = { 
-    [alias: string]: { pathnames: string[], exact: boolean }
-};
+export type AliasDefinition = { 
+    alias: string,
+    pathnames: string[], 
+    exact: boolean
+}
 
 type TsAliasList = { [alias: string]: string[] };
 
 type ModuleAliasList = { [alias: string]: string | Function };
 
-type TWebpackExternals = (data: { request: string }, callback: (err: undefined, result: string) => void) => void;
+type TWebpackExternals = (
+    data: { request: string }, 
+    callback: (err: undefined, result: string) => void
+) => void;
 
 /*----------------------------------
 - MODULE
@@ -45,7 +50,7 @@ export default class TsAlias {
     // Original typescript aliases
     public typescript: TsAliasList;
     // Normalized list
-    public list: AliasList;
+    public list: AliasDefinition[];
 
     public constructor( private options: TOptions = {} ) {
 
@@ -57,14 +62,12 @@ export default class TsAlias {
         // Aliases list already provided
         // No need to search and read the tsconfig file
         if ('aliases' in options) {
-            this.list = {}
-            for (const alias in options.aliases)
-                this.list[alias] = {
-                    ...options.aliases[alias],
-                    pathnames: options.aliases[alias].pathnames.map(
-                        pathname => path.join( process.cwd(), pathname )
-                    )
-                }
+            this.list = options.aliases.map((alias) => ({
+                ...alias,
+                pathnames: alias.pathnames.map(
+                    pathname => path.join( process.cwd(), pathname )
+                )
+            }))
             this.options.debug && console.log(LogPrefix, `Loaded aliases from object`, options.aliases, '=>', this.list);
             return;
         }
@@ -111,7 +114,7 @@ export default class TsAlias {
         } = this.readTsConfig(tsDir, tsFile));
 
         // Build the list of aliases
-        this.list = this.processAliases(this.typescript, tsBaseDir);
+        this.list = this.processTsAliases(this.typescript, tsBaseDir);
     }
 
     /*----------------------------------
@@ -149,18 +152,18 @@ export default class TsAlias {
 
     }
 
-    private processAliases( tsAliases: TsAliasList, tsBaseDir: string ): AliasList {
+    private processTsAliases( tsAliases: TsAliasList, tsBaseDir: string ): AliasDefinition[] {
 
-        const list: AliasList = {};
+        const list: AliasDefinition[] = [];
 
-        for (let match in tsAliases) {
+        for (let alias in tsAliases) {
 
-            const destinations = tsAliases[match];
+            const destinations = tsAliases[alias];
 
-            // Détermine if it must be exact match
-            let exact = !match.endsWith('/*');
+            // Détermine if it must be exact alias
+            let exact = !alias.endsWith('/*');
             if (!exact)
-                match = match.substring(0, match.length - 2);
+                alias = alias.substring(0, alias.length - 2);
             
             // Process each destination path
             const pathnames: string[] = [];
@@ -188,7 +191,7 @@ export default class TsAlias {
                     pathnames.push( tsBaseDir );
             }
 
-            list[match] = { exact, pathnames }
+            list.push({ alias, exact, pathnames })
         }
 
         this.options.debug && console.log(LogPrefix, `Processed aliases:`, list, { tsBaseDir });
@@ -245,8 +248,7 @@ export default class TsAlias {
     public realpath( request: string, strict: true): string | null;
     public realpath( request: string, strict?: boolean): string | null {
 
-        for (const alias in this.list) {
-            const { exact, pathnames } = this.list[alias];
+        for (const { alias, exact, pathnames } of this.list) {
             for (const pathname of pathnames) {
 
                 if (exact) {
@@ -259,7 +261,6 @@ export default class TsAlias {
                     return pathname + request.substring(alias.length);
 
                 }
-
             }
         }
 
@@ -297,9 +298,7 @@ export default class TsAlias {
         const externalsList: {[alias: string]: { pathname: string, exact: boolean }} = {};
 
         aliasesIt:
-        for (let match in this.list) {
-
-            const { exact, pathnames } = this.list[match];
+        for (let { alias, exact, pathnames } of this.list) {
 
             let curAliases: string[] = [];
             if (modulesPath === undefined)
@@ -316,7 +315,7 @@ export default class TsAlias {
                     // Externals
                     if (nodeExternals === true && pathnames.length === 1) {
 
-                        externalsList[match] = { pathname, exact };
+                        externalsList[alias] = { pathname, exact };
                         continue aliasesIt;
 
                     }
@@ -327,9 +326,9 @@ export default class TsAlias {
 
             // From webpack doc: « A trailing $ can also be added to the given object's keys to signify an exact match: »
             if (exact)
-                match += '$';
+                alias += '$';
 
-            aliases[match] = curAliases;
+            aliases[alias] = curAliases;
         }
 
         this.options.debug && console.log(LogPrefix, `Webpack aliases =`, aliases, 'Webpakc externals =', externalsList);
@@ -373,9 +372,7 @@ export default class TsAlias {
         const cache: {[request: string]: string} = {};
 
         // For each registered alias
-        for (const alias in this.list) {
-
-            const { exact, pathnames } = this.list[alias];
+        for (const { alias, exact, pathnames } of this.list) {
 
             // Create a resolver
             moduleAlias[alias] = (from, request, requestAlias) => {
@@ -427,7 +424,7 @@ export default class TsAlias {
             };
         }
 
-        this.options.debug && console.log(LogPrefix, `Module Alias:`, moduleAlias);
+        this.options.debug && console.log(LogPrefix, `Module AliasDefinition:`, moduleAlias);
 
         return moduleAlias;
 

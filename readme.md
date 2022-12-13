@@ -73,20 +73,19 @@ An Error will be throwed if rootDir doesn't exists.
 If for any reason, you already loaded the tsconfig aliases in memory, you can provide them via the `aliases` option:
 
 ```typescript
-const list = {
-    '@server': {
-        // A list of destination paths
-        pathnames: ['./src/server'],
-        // If exact = true, only "@server" will be matched
-        // If exact = false, "@server" and "@server/*" will be matched
-        exact: false
-    },
-    'react': {
-        // pathnames can also be module names
-        pathnames: ['preact'],
-        exact: true
-    },
-}
+const list = [{
+    alias: '@server',
+    // A list of destination paths
+    pathnames: ['./src/server'],
+    // If exact = true, only "@server" will be matched
+    // If exact = false, "@server" and "@server/*" will be matched
+    exact: false
+}, {
+    alias: 'react',
+    // pathnames can also be module names
+    pathnames: ['preact'],
+    exact: true
+}]
 
 const aliases = new Aliases({ aliases: list });
 ```
@@ -214,6 +213,22 @@ moduleAlias.addAliases( aliases.forModuleAlias() );
 </p>
 
 -----------
+
+## Changelog
+
+### 13 December 2022
+
+* Store aliases in array instead of indexing by alias.
+It allows you to create an exact & prefix version for the same alias.
+By example:
+```typescript
+{
+    // Exact version: only match "@server"
+    "@server": ["./server"],
+    // Prefix version: match any import that starts by "@server/"
+    "@server/*": ["./server/*"],
+}
+```
 
 ## TODO
 

@@ -19,7 +19,7 @@ const LogPrefix = '[ts-alias]';
 - TYPES
 ----------------------------------*/
 
-export type TOptions = ({
+export type TInputOptions = ({
     rootDir?: string,
 } | {
     aliases: AliasDefinition[]
@@ -42,8 +42,19 @@ type ModuleAliasList = { [alias: string]: string | Function };
 
 type TWebpackExternals = (
     data: { request: string }, 
-    callback: (err: undefined, result: string) => void
+    callback: (err?: undefined, result?: string) => void
 ) => void;
+
+export type TOutputOptions<TNodeExternals extends boolean> = {
+    modulesPath?: string, 
+    shortenPaths?: boolean,
+    nodeExternals?: TNodeExternals 
+}
+
+type TWebpackOutput<TNodeExternals extends boolean> = { 
+    aliases: TsAliasList,
+    externals: TNodeExternals extends true ? TWebpackExternals : undefined
+}
 
 /*----------------------------------
 - MODULE
@@ -55,7 +66,7 @@ export default class TsAlias {
     // Normalized list
     public list: AliasDefinition[];
 
-    public constructor( private options: TOptions = {} ) {
+    public constructor( private options: TInputOptions = {} ) {
 
         this.options.debug && console.log(LogPrefix, `Instanciate with the following options:`, options);
 
@@ -285,15 +296,9 @@ export default class TsAlias {
     ----------------------------------*/
 
     // https://webpack.js.org/configuration/resolve/#resolvealias
-    public forWebpack( modulesPath?: string ): { aliases: TsAliasList };
-    public forWebpack( modulesPath: string, nodeExternals: true ): { 
-        aliases: TsAliasList, 
-        externals: TWebpackExternals 
-    };
-    public forWebpack( modulesPath?: string, nodeExternals?: boolean ): { 
-        aliases: TsAliasList, 
-        externals?: TWebpackExternals 
-    } {
+    public forWebpack<TNodeExternals extends boolean>({ 
+        modulesPath, shortenPaths, nodeExternals 
+    }: TOutputOptions<TNodeExternals>): TWebpackOutput<TNodeExternals> {
 
         this.options.debug && console.log(LogPrefix, `Generating webpack aliases ...`);
 
@@ -309,7 +314,7 @@ export default class TsAlias {
             else for (let pathname of pathnames) {
 
                 // Reference to node_modules
-                if (pathname.startsWith(modulesPath)) {
+                if (shortenPaths && pathname.startsWith(modulesPath)) {
 
                     // Transforms paths to node_module into module reference
                     // Ex: "../node_modules/declarative-scraper" => "declarative-scraper"
@@ -336,11 +341,11 @@ export default class TsAlias {
 
         this.options.debug && console.log(LogPrefix, `Webpack aliases =`, aliases, 'Webpakc externals =', externalsList);
 
-        if (nodeExternals === undefined)
-            return { aliases };
+        if (!nodeExternals)
+            return { aliases } as TWebpackOutput<TNodeExternals>;
 
         // https://webpack.js.org/configuration/externals/#function
-        const externals = ({ request }, callback) => {
+        const externals: TWebpackExternals = ({ request }, callback) => {
 
             for (const alias in externalsList) {
                 const { pathname, exact } = externalsList[alias];
@@ -364,7 +369,7 @@ export default class TsAlias {
         }
 
         this.options.debug && console.log(LogPrefix, `Webpack aliases:`, aliases);
-        return { aliases, externals };
+        return { aliases, externals } as TWebpackOutput<TNodeExternals>;
 
     }
 

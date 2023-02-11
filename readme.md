@@ -197,6 +197,23 @@ module.export = {
 }
 ```
 
+You can pass options in forWebpack():
+
+```typescript
+const webpackAliases = aliases.forWebpack({
+
+    // The path where to resolve node modules
+    modulesPath: string,
+
+    // Set to true if you want forWebpack to output the package name (ex: `ts-alias/src/index.ts`) instead of the path to node_modules (ex: `./node_modules/ts-alias/src/index.ts`)
+    shortenPaths: boolean,
+    
+    // When set to true, it will return a { aliases, externals } object with the aliases for webpack,
+    //  and a nodeExternals function for webpack
+    nodeExternals: boolean
+});
+```
+
 ## Convert the aliases list for [module-alias](https://github.com/ilearnio/module-alias)
 
 ```typescript
@@ -216,7 +233,17 @@ moduleAlias.addAliases( aliases.forModuleAlias() );
 
 ## Changelog
 
-### 13 December 2022
+### 0.0.7 (16 December 2022)
+
+* Use a TOutputOptions object for passing options in forWebpack()
+```typescript
+public forWebpack<TNodeExternals extends boolean>({ 
+    modulesPath, shortenPaths, nodeExternals 
+}: TOutputOptions<TNodeExternals>): TWebpackOutput<TNodeExternals>
+```
+
+* Added a shortenPaths option for forWebpack()
+Set to true if you want forWebpack to output the package name (ex: `ts-alias/src/index.ts`) instead of the path to node_modules (ex: `./node_modules/ts-alias/src/index.ts`)
 
 * Store aliases in array instead of indexing by alias.
 It allows you to create an exact & prefix version for the same alias.
